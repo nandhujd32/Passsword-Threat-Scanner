@@ -5,6 +5,7 @@
 Password Threat Scanner is a client-side web application that analyzes password strength while ensuring complete user privacy. The application performs all computations locally within the browser, eliminating the need for server-side processing and preventing sensitive data from leaving the user's device.
 
 It evaluates password complexity, estimates entropy, calculates brute-force crack times across multiple attack scenarios, detects common password vulnerabilities, and generates stronger password suggestions. The application also uses SHA-256 hashing to identify password reuse without storing passwords in plain text.
+
 live demo:https://github.com/nandhujd32/Passsword-Threat-Scanner
 
 ## Features
