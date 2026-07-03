@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Password Threat Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<svg class="circuit-bg" id="circuitBg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
+<div class="scan-sweep"></div>
+<div class="scanlines"></div>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="hud-title">PASSWORD <span>THREAT SCANNER</span></div>
+    </div>
+    <div class="hud-status"><span class="dot"></span>SCANNER ONLINE · LOCAL PROCESSING ONLY</div>
+  </header>
+  <div class="subtitle">Live evaluation runs entirely in this browser — nothing is transmitted</div>
+
+  <!-- HERO: gauge + input -->
+  <div class="hero">
+    <div class="corner tl"></div><div class="corner br"></div>
+    <div class="gauge-holder">
+      <div class="radar-sweep"></div>
+      <svg id="gaugeSvg" viewBox="0 0 200 200" width="190" height="190">
+        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(94,196,255,0.12)" stroke-width="1"/>
+        <circle id="ringDashed" cx="100" cy="100" r="96" fill="none" stroke="rgba(94,196,255,0.35)" stroke-width="1" stroke-dasharray="2 8"/>
+        <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="14"/>
+        <circle id="gaugeArc" cx="100" cy="100" r="78" fill="none" stroke="#38BDF8" stroke-width="14"
+          stroke-linecap="round" stroke-dasharray="490.1" stroke-dashoffset="490.1"
+          transform="rotate(-90 100 100)"/>
+      </svg>
+      <div class="gauge-readout">
+        <div class="gauge-score" id="scoreNum">0</div>
+        <div class="gauge-label" id="bitsLabel">0.0 BITS</div>
+      </div>
+    </div>
+    <div class="hero-copy">
+      <div class="eyebrow">Threat assessment</div>
+      <p class="verdict" id="verdictText" data-text="STANDBY">STANDBY</p>
+      <p class="verdict-sub" id="verdictSub">Enter a password below to begin a live scan. The ring fills and glitches to a new verdict as the assessment updates.</p>
+    </div>
+  </div>
+
+  <!-- PANEL 01: INPUT -->
+  <div class="panel">
+    <div class="panel-tag">PANEL 01 // INPUT STREAM</div>
+    <h3>Target string</h3>
+    <p class="desc">Type the password to test. Processed locally, character by character, in real time.</p>
+    <div class="input-row">
+      <input type="password" id="pw" placeholder="Begin scan…" autocomplete="off" spellcheck="false">
+      <button class="btn" id="toggleShow">SHOW</button>
+      <button class="btn" id="clearPw">CLEAR</button>
+    </div>
+  </div>
+
+  <!-- PANEL 02: COMPOSITION -->
+  <div class="panel">
+    <div class="panel-tag">PANEL 02 // SIGNAL COMPOSITION</div>
+    <h3>Character-class breakdown</h3>
+    <p class="desc">A wider spread across classes expands the effective guessing pool per character.</p>
+    <div class="comp-grid" id="compGrid"></div>
+  </div>
+
+  <!-- PANEL 03: CRACK TIME -->
+  <div class="panel">
+    <div class="panel-tag">PANEL 03 // BREACH PROJECTION</div>
+    <h3>Estimated time to crack</h3>
+    <p class="desc">Average-case time to exhaust the search space at various attacker capabilities.</p>
+    <table>
+      <thead><tr><th>Attack scenario</th><th>Guess rate</th><th>Estimated time</th></tr></thead>
+      <tbody id="crackTable"></tbody>
+    </table>
+  </div>
+
+  <!-- PANEL 04: FLAGS -->
+  <div class="panel">
+    <div class="panel-tag">PANEL 04 // ANOMALY DETECTION</div>
+    <h3>Vulnerability flags</h3>
+    <p class="desc">Pattern-based checks that catch weaknesses raw entropy math can miss.</p>
+    <div class="flag-list" id="flagList"></div>
+  </div>
+
+  <!-- PANEL 05: GENERATOR -->
+  <div class="panel">
+    <div class="panel-tag">PANEL 05 // COUNTERMEASURE SYNTHESIS</div>
+    <h3>Generate stronger alternatives</h3>
+    <p class="desc">Configure and synthesize replacement passwords. Nothing here is derived from the target string above.</p>
+
+    <div class="gen-controls">
+      <div>
+        <span class="ctrl-label">Mode</span>
+        <select id="genMode">
+          <option value="random">Random characters</option>
+          <option value="passphrase">Passphrase (word-based)</option>
+        </select>
+      </div>
+      <div id="lengthCtrl">
+        <span class="ctrl-label">Length: <span id="lenVal">16</span></span>
+        <div class="range-row"><input type="range" id="lenSlider" min="8" max="32" value="16"></div>
+      </div>
+      <div id="wordCtrl" style="display:none;">
+        <span class="ctrl-label">Word count: <span id="wcVal">4</span></span>
+        <div class="range-row"><input type="range" id="wcSlider" min="3" max="6" value="4"></div>
+      </div>
+      <div id="classCtrl">
+        <span class="ctrl-label">Character classes</span>
+        <div class="chip-row">
+          <div class="chip on" data-class="lower">a-z</div>
+          <div class="chip on" data-class="upper">A-Z</div>
+          <div class="chip on" data-class="digit">0-9</div>
+          <div class="chip on" data-class="symbol">!@#</div>
+        </div>
+      </div>
+      <div>
+        <span class="ctrl-label">Options</span>
+        <div class="chip-row"><div class="chip" id="ambigChip">exclude ambiguous (l1IO0)</div></div>
+      </div>
+    </div>
+
+    <div class="suggestion-list" id="suggestions"></div>
+    <div class="btn-row"><button class="btn" id="regenBtn">GENERATE 3 NEW</button></div>
+  </div>
+
+  <!-- PANEL 06: LEDGER -->
+  <div class="panel">
+    <div class="panel-tag">PANEL 06 // CUSTODY LOG</div>
+    <h3>Hash-based reuse ledger</h3>
+    <p class="desc">
+      Real systems never store your actual password — they store a one-way <b>SHA-256</b> hash and compare hashes on reuse. This ledger does the same, in this browser's memory only.
+    </p>
+    <div id="vaultList"><div class="ledger-empty">Ledger is empty — no passwords committed this session.</div></div>
+    <div class="btn-row">
+      <button class="btn" id="addVaultBtn">COMMIT TO LEDGER</button>
+      <button class="btn" id="clearVaultBtn">CLEAR LEDGER</button>
+    </div>
+    <div class="verdict-banner" id="reuseBanner"></div>
+  </div>
+
+  <!-- PANEL 07: HISTORY -->
+  <div class="panel">
+    <div class="panel-tag">PANEL 07 // SCAN HISTORY</div>
+    <h3>Session log</h3>
+    <p class="desc">File the current scan to keep a running comparison. Only score, length, and a hash fingerprint are kept — never the password.</p>
+    <table id="historyTable">
+      <thead><tr><th>Scan</th><th>Length</th><th>Score</th><th>Verdict</th><th>Fingerprint</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn" id="fileCaseBtn">FILE CURRENT SCAN</button>
+      <button class="btn" id="exportBtn">COPY REPORT AS TEXT</button>
+      <span class="copied-note" id="copiedNote" style="display:none;">Copied ✓</span>
+    </div>
+  </div>
+
+  <footer>NO NETWORK CALLS · NO STORAGE PERSISTS AFTER THIS TAB CLOSES</footer>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
